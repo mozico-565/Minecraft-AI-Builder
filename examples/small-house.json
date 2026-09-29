@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "Small House",
+  "size": { "x": 9, "y": 6, "z": 7 },
+  "palette": { "wall": "minecraft:white_concrete", "glass": "minecraft:glass" },
+  "operations": [
+    { "type": "floor", "from": [0, 0, 0], "to": [8, 0, 6], "block": "minecraft:oak_planks" },
+    { "type": "walls", "from": [0, 1, 0], "to": [8, 4, 6], "block": "$wall" },
+    { "type": "roof", "from": [0, 5, 0], "to": [8, 5, 6], "block": "minecraft:dark_oak_planks", "style": "flat" },
+    { "type": "door", "at": [4, 1, 0], "width": 1, "height": 2, "axis": "x", "block": "minecraft:air" },
+    { "type": "window", "at": [1, 2, 0], "width": 2, "height": 2, "axis": "x", "block": "$glass" }
+  ]
+}
