@@ -1,0 +1,28 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Minecraft AI Assistant - Android",
+    "description": "Local Bedrock tools, world memory, navigation, and safe AI Builder engine",
+    "uuid": "5b0fdff4-8d7a-4e47-9650-2d77b1fc2cc1",
+    "version": [0, 1, 0],
+    "min_engine_version": [1, 26, 40]
+  },
+  "modules": [
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "f80bc9d0-99e3-4e87-ac9e-62d4a51bec1f",
+      "version": [0, 1, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    { "module_name": "@minecraft/server", "version": "2.9.0" },
+    { "module_name": "@minecraft/server-ui", "version": "2.1.0" }
+  ],
+  "metadata": {
+    "authors": ["Mohammed", "OpenAI Codex"],
+    "license": "MIT",
+    "product_type": "addon"
+  }
+}
