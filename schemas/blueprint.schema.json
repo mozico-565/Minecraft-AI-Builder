@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minecraft-ai-builder.dev/schemas/blueprint-v1.json",
+  "title": "Minecraft AI Builder Blueprint v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "size", "operations"],
+  "properties": {
+    "version": { "const": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "description": { "type": "string", "maxLength": 400 },
+    "size": { "$ref": "#/$defs/size" },
+    "palette": {
+      "type": "object",
+      "maxProperties": 48,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+      "additionalProperties": { "$ref": "#/$defs/blockId" }
+    },
+    "components": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 128,
+        "items": { "$ref": "#/$defs/operation" }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "items": { "$ref": "#/$defs/operation" }
+    }
+  },
+  "$defs": {
+    "coord": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        { "type": "integer", "minimum": -256, "maximum": 256 },
+        { "type": "integer", "minimum": -128, "maximum": 384 },
+        { "type": "integer", "minimum": -256, "maximum": 256 }
+      ],
+      "items": false
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 1, "maximum": 128 },
+        "y": { "type": "integer", "minimum": 1, "maximum": 128 },
+        "z": { "type": "integer", "minimum": 1, "maximum": 128 }
+      }
+    },
+    "blockId": { "type": "string", "pattern": "^minecraft:[a-z0-9_]+$", "maxLength": 80 },
+    "block": {
+      "oneOf": [
+        { "$ref": "#/$defs/blockId" },
+        { "type": "string", "pattern": "^\\$[a-z][a-z0-9_]{0,31}$" }
+      ]
+    },
+    "states": {
+      "type": "object",
+      "maxProperties": 12,
+      "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+    },
+    "base": {
+      "type": "object",
+      "properties": {
+        "block": { "$ref": "#/$defs/block" },
+        "states": { "$ref": "#/$defs/states" }
+      }
+    },
+    "operation": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "at", "block"],
+          "properties": { "type": { "const": "set_block" }, "at": { "$ref": "#/$defs/coord" }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "from", "to", "block"],
+          "properties": { "type": { "enum": ["fill", "floor"] }, "from": { "$ref": "#/$defs/coord" }, "to": { "$ref": "#/$defs/coord" }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "from", "to", "block"],
+          "properties": { "type": { "enum": ["hollow_box", "walls"] }, "from": { "$ref": "#/$defs/coord" }, "to": { "$ref": "#/$defs/coord" }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" }, "thickness": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1 } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "from", "to", "block"],
+          "properties": { "type": { "const": "line" }, "from": { "$ref": "#/$defs/coord" }, "to": { "$ref": "#/$defs/coord" }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "at", "height", "block"],
+          "properties": { "type": { "const": "column" }, "at": { "$ref": "#/$defs/coord" }, "height": { "type": "integer", "minimum": 1, "maximum": 128 }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "from", "to", "block"],
+          "properties": { "type": { "const": "roof" }, "from": { "$ref": "#/$defs/coord" }, "to": { "$ref": "#/$defs/coord" }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" }, "style": { "enum": ["flat", "gable_x", "gable_z"] } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "at", "width", "height", "block"],
+          "properties": { "type": { "enum": ["door", "window"] }, "at": { "$ref": "#/$defs/coord" }, "width": { "type": "integer", "minimum": 1, "maximum": 16 }, "height": { "type": "integer", "minimum": 1, "maximum": 16 }, "axis": { "enum": ["x", "z"] }, "block": { "$ref": "#/$defs/block" }, "states": { "$ref": "#/$defs/states" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "component", "at"],
+          "properties": { "type": { "const": "component" }, "component": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,31}$" }, "at": { "$ref": "#/$defs/coord" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "count", "step", "operation"],
+          "properties": { "type": { "const": "repeat" }, "count": { "type": "integer", "minimum": 1, "maximum": 64 }, "step": { "$ref": "#/$defs/coord" }, "operation": { "$ref": "#/$defs/operation" } }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["type", "axis", "pivot", "operation"],
+          "properties": { "type": { "const": "mirror" }, "axis": { "enum": ["x", "z"] }, "pivot": { "type": "integer", "minimum": -256, "maximum": 256 }, "includeOriginal": { "type": "boolean" }, "operation": { "$ref": "#/$defs/operation" } }
+        }
+      ]
+    }
+  }
+}
