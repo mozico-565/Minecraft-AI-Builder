@@ -1,0 +1,30 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Minecraft AI Assistant - Dedicated Server",
+    "description": "Natural-language tool agent and safe AI Builder for Bedrock Dedicated Server",
+    "uuid": "7bb3b933-1b44-4c55-a66b-30f105f98eb2",
+    "version": [0, 1, 0],
+    "min_engine_version": [1, 26, 40]
+  },
+  "modules": [
+    {
+      "type": "script",
+      "language": "javascript",
+      "uuid": "552d1195-67ac-4884-b6d2-f2486872ab75",
+      "version": [0, 1, 0],
+      "entry": "scripts/main.js"
+    }
+  ],
+  "dependencies": [
+    { "module_name": "@minecraft/server", "version": "2.9.0" },
+    { "module_name": "@minecraft/server-ui", "version": "2.1.0" },
+    { "module_name": "@minecraft/server-net", "version": "1.0.0-beta.1.26.40-stable" },
+    { "module_name": "@minecraft/server-admin", "version": "1.0.0-beta.1.26.40-stable" }
+  ],
+  "metadata": {
+    "authors": ["Mohammed", "OpenAI Codex"],
+    "license": "MIT",
+    "product_type": "addon"
+  }
+}
