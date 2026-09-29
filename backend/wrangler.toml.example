@@ -1,0 +1,13 @@
+name = "minecraft-ai-builder"
+main = "../dist/backend/worker.mjs"
+compatibility_date = "2026-09-29"
+
+[vars]
+AI_BASE_URL = "https://api.groq.com/openai/v1"
+AI_MODEL = "llama-3.3-70b-versatile"
+# Set to "json_schema" only when the selected provider/model supports strict JSON Schema.
+AI_STRUCTURED_OUTPUT = "json_object"
+
+# Add secrets with:
+# wrangler secret put AI_API_KEY
+# wrangler secret put BUILDER_SHARED_SECRET
