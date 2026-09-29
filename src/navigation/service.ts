@@ -1,4 +1,4 @@
-src/navigation/service.tsimport { LocationWaypoint, WaypointTexture, system, world, type Player } from "@minecraft/server";
+import { LocationWaypoint, WaypointTexture, system, world, type Player } from "@minecraft/server";
 import type { WaypointRecord } from "../memory/world-memory.js";
 
 interface ActiveGuide { waypoint: WaypointRecord; marker: LocationWaypoint }
