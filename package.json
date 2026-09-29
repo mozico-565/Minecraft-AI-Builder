@@ -1,0 +1,25 @@
+{
+  "name": "minecraft-ai-builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "node tools/clean.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --import tsx tests/*.test.ts",
+    "validate": "node tools/validate-project.mjs",
+    "build": "node tools/build.mjs",
+    "check": "npm run typecheck && npm test && npm run validate && npm run build"
+  },
+  "devDependencies": {
+    "@minecraft/server": "2.9.0",
+    "@minecraft/server-admin": "1.0.0-beta.1.26.40-stable",
+    "@minecraft/server-net": "1.0.0-beta.1.26.40-stable",
+    "@minecraft/server-ui": "2.1.0",
+    "@types/node": "24.5.2",
+    "ajv": "8.17.1",
+    "esbuild": "0.25.10",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2"
+  }
+}
