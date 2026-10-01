@@ -21,6 +21,10 @@ Recovery/publication status is recorded in [docs/RECOVERY.md](docs/RECOVERY.md),
 
 No API key is stored in JavaScript, GitHub, or either `.mcpack`. The provider key exists only in the Cloudflare Worker secret. The Dedicated Server reads a separate shared token from `secrets.json`, where scripts cannot extract its plaintext value.
 
+### Experimental Android WebSocket path
+
+The existing Worker now contains an isolated `/minecraft-ws` compatibility probe plus `/ws-test/health`. It tests whether Minecraft Android's Admin-only `/wsserver` command can complete the Minecraft Command WebSocket v1 exchange through Cloudflare. It sends only a `PlayerMessage` subscription and one fixed `tellraw`; incoming data can never become a raw command. This is not yet an AI bridge and does not replace the Dedicated Server path. See [the test command, safe logs, protocol boundaries, and decision gate](docs/WEBSOCKET_POC.md).
+
 ## Compatibility targets
 
 **Android: Minecraft Bedrock `1.21.100`, `@minecraft/server` `2.1.0`, `@minecraft/server-ui` `2.0.0`, all stable.** The pack upgrades to `0.1.1` using the existing UUIDs to preserve world memory/checkpoints. Navigation uses the action-bar arrow and distance; the native Locator Bar is enabled only on runtimes that expose it. Nearest-biome lookup is unavailable on 1.21.100 and returns an explicit limitation message. Builder, Agent tools, Image-to-Build import, preview, Undo and recovery retain the existing implementation. See [the compatibility audit and verification](docs/ANDROID_1_21_100.md).
@@ -207,6 +211,7 @@ src/storage       Dynamic Properties and StructureManager action history
 src/ui            assistant/builder mobile forms and particle preview
 src/planner       offline capability guard and BDS HTTPS adapters
 backend           secure AI proxy, agent schema, and system prompts
+                  plus isolated /minecraft-ws compatibility probe
 src/image         BuildPlan integrity/schema and mobile image import/session UI
 schemas           Blueprint and BuildPlan JSON Schemas
 examples          valid sample blueprints

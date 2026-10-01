@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Android `/wsserver` compatibility probe
+
+- Added isolated Cloudflare Worker routes `/minecraft-ws` and `/ws-test/health` without changing the existing AI, image-session, or Companion routes.
+- Added bounded Minecraft Command WebSocket v1 subscription/response probing with one fixed non-destructive `tellraw` command.
+- Added safe metadata-only connection logs, malformed-frame handling, frame/rate limits, tests, and an Android acceptance guide.
+- Kept the AI bridge disabled and the Dedicated Server path intact until a physical Android client proves protocol compatibility.
+
 ## Android 1.21.100 compatibility / pack 0.1.1 — 2026-09-30
 
 - Retained Android pack UUIDs, raised pack/module version to 0.1.1, and pinned available stable server 2.1.0 / UI 2.0.0 dependencies and engine 1.21.100.
