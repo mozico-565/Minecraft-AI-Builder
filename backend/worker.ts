@@ -6,6 +6,12 @@ import blueprintSchema from "../schemas/blueprint.schema.json" with { type: "jso
 import { PLANNER_SYSTEM_PROMPT } from "./system-prompt.js";
 import { ASSISTANT_SYSTEM_PROMPT } from "./assistant-prompt.js";
 import { AGENT_RESPONSE_SCHEMA } from "./agent-schema.js";
+import {
+  MINECRAFT_WS_HEALTH_PATH,
+  MINECRAFT_WS_PATH,
+  minecraftWebSocketHealth,
+  upgradeMinecraftWebSocket
+} from "./minecraft-ws.js";
 
 interface Env {
   VISION_PROVIDER?: string;
@@ -82,6 +88,8 @@ async function providerRequest(env: Env, body: RequestBody): Promise<unknown> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === MINECRAFT_WS_HEALTH_PATH && request.method === "GET") return minecraftWebSocketHealth();
+    if (url.pathname === MINECRAFT_WS_PATH) return upgradeMinecraftWebSocket(request);
     if (request.method === "GET" && url.pathname === "/companion") return new Response(COMPANION_HTML, {headers:{"content-type":"text/html;charset=utf-8","cache-control":"no-store","referrer-policy":"no-referrer","content-security-policy":"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src blob: data:; base-uri 'none'; frame-ancestors 'none'"}});
     const match = /^\/image\/session\/([a-f0-9]{32})$/.exec(url.pathname);
     if (match && request.method === "POST") {
