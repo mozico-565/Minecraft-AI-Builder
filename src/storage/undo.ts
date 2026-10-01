@@ -26,7 +26,8 @@ function safeDelete(ids: string[]): void {
   }
 }
 
-export function createUndoSnapshot(dimension: Dimension, from: Vec3Tuple, to: Vec3Tuple, actionType = "build", label?: string): UndoRecord {
+export function createUndoSnapshot(dimension: Dimension, from: Vec3Tuple, to: Vec3Tuple, actionType = "build", label?: string, ownerId?: string): UndoRecord {
+  if ((to[0]-from[0]+1)*(to[1]-from[1]+1)*(to[2]-from[2]+1)>100000) throw new Error("Undo bounding volume exceeds 100,000 block safety limit");
   const id = `${system.currentTick}_${Math.floor(Math.random() * 1_000_000)}`;
   const structureIds: string[] = [];
   const tileOrigins: Vec3Tuple[] = [];
@@ -46,27 +47,31 @@ export function createUndoSnapshot(dimension: Dimension, from: Vec3Tuple, to: Ve
     throw error;
   }
 
-  const record: UndoRecord = { id, dimensionId: dimension.id, from, structureIds, tileOrigins, createdTick: system.currentTick, actionType, label };
+  const record: UndoRecord = { id, dimensionId: dimension.id, from, structureIds, tileOrigins, createdTick: system.currentTick, actionType, label, ownerId };
   const history = loadUndoHistory();
   history.push(record);
+  const expiredRecords:UndoRecord[]=[];
   while (history.length > MAX_UNDO) {
     const expired = history.shift();
-    if (expired) safeDelete(expired.structureIds);
+    if (expired) expiredRecords.push(expired);
   }
-  saveUndoHistory(history);
+  try{saveUndoHistory(history);}catch(error){safeDelete(structureIds);throw error;}
+  expiredRecords.forEach(record=>safeDelete(record.structureIds));
   return record;
 }
 
-export function undoLast(): boolean {
+export function undoLast(ownerId?:string): boolean {
   const history = loadUndoHistory();
   const record = history.pop();
   if (!record) return false;
+  if(ownerId && record.ownerId && ownerId!==record.ownerId)throw new Error("Last action belongs to another player");
   const dimension = world.getDimension(record.dimensionId);
+  if (record.structureIds.some(id => !world.structureManager.get(id))) throw new Error("Undo snapshot is incomplete; history retained");
   record.structureIds.forEach((id, index) => {
     const origin = record.tileOrigins[index];
     if (origin && world.structureManager.get(id)) world.structureManager.place(id, dimension, { x: origin[0], y: origin[1], z: origin[2] }, { includeBlocks: true, includeEntities: false });
   });
-  safeDelete(record.structureIds);
   saveUndoHistory(history);
+  safeDelete(record.structureIds);
   return true;
 }
