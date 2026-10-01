@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "name": "Modern Wing 40x8x6",
+  "size": {
+    "x": 40,
+    "y": 6,
+    "z": 8
+  },
+  "palette": {
+    "floor": "minecraft:white_concrete",
+    "col": "minecraft:gray_concrete",
+    "trim": "minecraft:black_concrete",
+    "glass": "minecraft:white_concrete",
+    "air": "minecraft:air",
+    "roof": "minecraft:black_concrete",
+    "door": "minecraft:air"
+  },
+  "operations": [
+    {
+      "type": "fill",
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        39,
+        0,
+        7
+      ],
+      "block": "$floor"
+    },
+    {
+      "type": "fill",
+      "from": [
+        0,
+        1,
+        0
+      ],
+      "to": [
+        39,
+        5,
+        0
+      ],
+      "block": "$col"
+    },
+    {
+      "type": "fill",
+      "from": [
+        0,
+        1,
+        7
+      ],
+      "to": [
+        39,
+        5,
+        7
+      ],
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        0,
+        1,
+        0
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        0,
+        1,
+        7
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        39,
+        1,
+        0
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        39,
+        1,
+        7
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        10,
+        1,
+        0
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        10,
+        1,
+        7
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        20,
+        1,
+        0
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        20,
+        1,
+        7
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        30,
+        1,
+        0
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "column",
+      "at": [
+        30,
+        1,
+        7
+      ],
+      "height": 5,
+      "block": "$col"
+    },
+    {
+      "type": "window",
+      "at": [
+        2,
+        2,
+        0
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        12,
+        2,
+        0
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        22,
+        2,
+        0
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        32,
+        2,
+        0
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        2,
+        2,
+        7
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        12,
+        2,
+        7
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        22,
+        2,
+        7
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "window",
+      "at": [
+        32,
+        2,
+        7
+      ],
+      "width": 6,
+      "height": 2,
+      "axis": "x",
+      "block": "$glass"
+    },
+    {
+      "type": "door",
+      "at": [
+        18,
+        1,
+        0
+      ],
+      "width": 4,
+      "height": 3,
+      "axis": "x",
+      "block": "$door"
+    },
+    {
+      "type": "fill",
+      "from": [
+        18,
+        1,
+        1
+      ],
+      "to": [
+        21,
+        3,
+        6
+      ],
+      "block": "$air"
+    },
+    {
+      "type": "roof",
+      "from": [
+        0,
+        5,
+        0
+      ],
+      "to": [
+        39,
+        5,
+        7
+      ],
+      "block": "$roof",
+      "style": "flat"
+    }
+  ]
+}

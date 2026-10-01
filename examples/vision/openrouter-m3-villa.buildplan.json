@@ -1,0 +1,380 @@
+{
+  "schema_version": 1,
+  "plan_id": "38840c2b-5f3b-4768-85f8-2680eac301c3",
+  "task_id": "c362bf55-0a1a-4814-9cf8-5c5ac43db141",
+  "request_summary": "ابنِ جناحًا مودرن مستوحى من هاتين الصورتين بعرض 40 بلوك بالضبط، عمق 8، وارتفاع 6، وسقف مسطح أسود من minecraft:black_concrete. أريد الأعمدة الرمادية والنوافذ الأفقية البيضاء ومدخلًا، وغرفة داخلية مفتوحة يمكن دخولها. استخدم فقط fill وcolumn وwindow وdoor وroof، دون components أو mirror أو repeat. الإحداثيات القصوى [39,5,7]. استخدم 10 إلى 20 عملية مدمجة. لا تضف description، والاسم أقل من 60 حرفًا، وكل assumption أقل من 150 حرفًا. أعد JSON blueprint صالحًا فقط ضمن envelope blueprint/assumptions/open_choices المطلوب. لا تفرغ كل الحجم بالهواء، فقط المدخل والفراغ الداخلي إذا لزم.",
+  "source_images": [
+    {
+      "view": "two-exterior-views",
+      "width": 355,
+      "height": 139
+    }
+  ],
+  "detail": "DETAILED",
+  "scale": 1,
+  "target": {
+    "dimension": "minecraft:overworld",
+    "anchor": "player-relative",
+    "orientation": "player-facing"
+  },
+  "dimensions": {
+    "x": 40,
+    "y": 6,
+    "z": 8
+  },
+  "assumptions": [
+    "Front facade at z=0, back at z=7; columns at x=0,10,20,30,39 frame the elevation.",
+    "Horizontal white window bands simulated as white_concrete strips at y=2-3 between columns.",
+    "Door opening at x=18-21,z=0 carved as air; interior kept open per request."
+  ],
+  "open_choices": [
+    "Window material could be glass or white_concrete strips for opaque horizontal bands.",
+    "Door could be centered (x=18-21) or offset; centered chosen for symmetry.",
+    "Roof soffit trim could be added with black_concrete overhang if desired."
+  ],
+  "palette": {
+    "floor": "minecraft:white_concrete",
+    "col": "minecraft:gray_concrete",
+    "trim": "minecraft:black_concrete",
+    "glass": "minecraft:white_concrete",
+    "air": "minecraft:air",
+    "roof": "minecraft:black_concrete",
+    "door": "minecraft:air"
+  },
+  "blueprint": {
+    "version": 1,
+    "name": "Modern Wing 40x8x6",
+    "size": {
+      "x": 40,
+      "y": 6,
+      "z": 8
+    },
+    "palette": {
+      "floor": "minecraft:white_concrete",
+      "col": "minecraft:gray_concrete",
+      "trim": "minecraft:black_concrete",
+      "glass": "minecraft:white_concrete",
+      "air": "minecraft:air",
+      "roof": "minecraft:black_concrete",
+      "door": "minecraft:air"
+    },
+    "operations": [
+      {
+        "type": "fill",
+        "from": [
+          0,
+          0,
+          0
+        ],
+        "to": [
+          39,
+          0,
+          7
+        ],
+        "block": "$floor"
+      },
+      {
+        "type": "fill",
+        "from": [
+          0,
+          1,
+          0
+        ],
+        "to": [
+          39,
+          5,
+          0
+        ],
+        "block": "$col"
+      },
+      {
+        "type": "fill",
+        "from": [
+          0,
+          1,
+          7
+        ],
+        "to": [
+          39,
+          5,
+          7
+        ],
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          0,
+          1,
+          0
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          0,
+          1,
+          7
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          39,
+          1,
+          0
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          39,
+          1,
+          7
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          10,
+          1,
+          0
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          10,
+          1,
+          7
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          20,
+          1,
+          0
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          20,
+          1,
+          7
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          30,
+          1,
+          0
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "column",
+        "at": [
+          30,
+          1,
+          7
+        ],
+        "height": 5,
+        "block": "$col"
+      },
+      {
+        "type": "window",
+        "at": [
+          2,
+          2,
+          0
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          12,
+          2,
+          0
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          22,
+          2,
+          0
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          32,
+          2,
+          0
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          2,
+          2,
+          7
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          12,
+          2,
+          7
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          22,
+          2,
+          7
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "window",
+        "at": [
+          32,
+          2,
+          7
+        ],
+        "width": 6,
+        "height": 2,
+        "axis": "x",
+        "block": "$glass"
+      },
+      {
+        "type": "door",
+        "at": [
+          18,
+          1,
+          0
+        ],
+        "width": 4,
+        "height": 3,
+        "axis": "x",
+        "block": "$door"
+      },
+      {
+        "type": "fill",
+        "from": [
+          18,
+          1,
+          1
+        ],
+        "to": [
+          21,
+          3,
+          6
+        ],
+        "block": "$air"
+      },
+      {
+        "type": "roof",
+        "from": [
+          0,
+          5,
+          0
+        ],
+        "to": [
+          39,
+          5,
+          7
+        ],
+        "block": "$roof",
+        "style": "flat"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "build",
+      "dependencies": [],
+      "operation_count": 24
+    }
+  ],
+  "estimates": {
+    "block_writes": 1270,
+    "snapshot_volume": 1920
+  },
+  "validation": {
+    "validated": true
+  },
+  "persistence": {
+    "resumable": true
+  },
+  "bounds": {
+    "from": [
+      0,
+      0,
+      0
+    ],
+    "to": [
+      39,
+      5,
+      7
+    ]
+  },
+  "conflict_policy": "pause_on_conflict",
+  "progress": {
+    "completed_batches": 0
+  },
+  "checkpoint": {
+    "next_batch": 0
+  },
+  "plan_hash": "327bd5b6"
+}
