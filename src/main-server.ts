@@ -1,4 +1,4 @@
-import { serverAssistantPlanner, serverPlanner } from "./planner/server.js";
+import { serverAssistantPlanner, serverPlanner, serverImageBridge } from "./planner/server.js";
 import { startApp } from "./runtime/app.js";
 
-startApp(serverPlanner, serverAssistantPlanner);
+startApp(serverPlanner, serverAssistantPlanner, serverImageBridge);
