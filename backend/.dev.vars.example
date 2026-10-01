@@ -1,0 +1,16 @@
+# LOCAL server-side environment only; copy to repo-root .dev.vars (gitignored).
+AI_API_KEY=
+BUILDER_SHARED_SECRET=
+AI_BASE_URL=https://api.groq.com/openai/v1
+AI_MODEL=llama-3.3-70b-versatile
+AI_VISION_MODEL=qwen/qwen3.8-27b
+AI_VISION_REASONING_EFFORT=none
+AI_VISION_REASONING_FORMAT=hidden
+# Omit both reasoning fields when using a provider without Groq-compatible options.
+
+# Vision only: text assistant retains its existing compatible provider.
+VISION_PROVIDER=openrouter
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=minimax/minimax-m3
+OPENROUTER_OUTPUT_FORMAT=json_schema
+OPENROUTER_PROVIDER=Together
