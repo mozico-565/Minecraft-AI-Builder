@@ -100,13 +100,33 @@ export async function openAssistantMenu(player: Player, runtime: AgentRuntime, p
       .button(tr(player, "📍 احفظ هذا المكان", "📍 Save waypoint"))
       .button(tr(player, "🧭 الأماكن والتنقل", "🧭 Waypoints & navigation"))
       .button(tr(player, "↶ تراجع", "↶ Undo"))
-      .button(tr(player, "✕ إلغاء الإجراء", "✕ Cancel action"));
+      .button(tr(player, "✕ إلغاء الإجراء", "✕ Cancel action"))
+      .button(tr(player,"🛠 أدوات محلية","🛠 Local tools"));
     const response = await form.show(player);
     if (response.canceled || response.selection === undefined) return;
     if (response.selection === 0) await ask(player, runtime, planner);
     if (response.selection === 1) await saveWaypointForm(player, runtime);
     if (response.selection === 2) await waypointMenu(player, runtime);
     if (response.selection === 3) await executePrepared(player, runtime, runtime.prepare({ message: "Undo", toolCalls: [{ tool: "undo", arguments: {} }] }));
+    if (response.selection === 5) await localTools(player,runtime);
     if (response.selection === 4) await executePrepared(player, runtime, runtime.prepare({ message: "Cancel", toolCalls: [{ tool: "cancel_current_action", arguments: {} }] }));
   } catch (error) { player.sendMessage(`§cAI Assistant UI: ${error instanceof Error ? error.message : String(error)}`); }
+}
+
+async function localTools(player:Player,runtime:AgentRuntime):Promise<void>{
+ const tools=["get_player_position","get_target_block","place_feature","place_block","fill_region","replace_region"];
+ const response=await new ModalFormData().title("Local tools / أدوات محلية")
+ .dropdown("Tool / الأداة",["My position / موقعي","Look target / البلوك المستهدف","Oak tree / شجرة","Place block / بلوك","Fill / ملء","Replace / استبدال"])
+ .dropdown("Target / الموقع",["Player / هنا","Crosshair / ما أشير إليه"])
+ .textField("Block ID","minecraft:gold_block",{defaultValue:"minecraft:gold_block"})
+ .textField("Size X,Y,Z","10,1,10",{defaultValue:"10,1,10"})
+ .textField("Replace source ID","minecraft:grass_block",{defaultValue:"minecraft:grass_block"}).show(player);
+ if(response.canceled)return;const v=response.formValues??[];const tool=tools[Number(v[0]??0)]!;const target=Number(v[1])===1?"crosshair":"player";
+ const args:Record<string,unknown>={};
+ if(tool==="place_feature"){args.feature="tree";args.target=target;}
+ if(["place_block","fill_region","replace_region"].includes(tool)){args.block=String(v[2]);args.target=target;}
+ if(["fill_region","replace_region"].includes(tool)){const size=String(v[3]).split(",").map(Number);args.size={x:size[0],y:size[1],z:size[2]};}
+ if(tool==="replace_region")args.sourceBlocks=[String(v[4])];
+ if(tool==="place_block")args.mode="adjacent";
+ await confirmPrepared(player,runtime,runtime.prepare({message:"Local tool / أداة محلية",toolCalls:[{tool,arguments:args}]}));
 }

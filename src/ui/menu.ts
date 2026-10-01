@@ -1,3 +1,5 @@
+import { imageMenu, type ImageBridge } from "../image/ui.js";
+import type { BuildPlan } from "../image/build-plan.js";
 import { Player, system, type Vector3 } from "@minecraft/server";
 import { ActionFormData, MessageFormData, ModalFormData } from "@minecraft/server-ui";
 import type { Blueprint, Vec3Tuple } from "../blueprint/types.js";
@@ -37,13 +39,13 @@ function placement(player: Player, blueprint: Blueprint, location: number, rotat
   return { origin: [origin[0] + dx, origin[1] + dy, origin[2] + dz], rotation };
 }
 
-async function choosePlacement(player: Player, blueprint: Blueprint): Promise<Placement | undefined> {
+async function choosePlacement(player: Player, blueprint: Blueprint, initialRaise=0): Promise<Placement | undefined> {
   const form = new ModalFormData()
     .title(tr(player, "موضع البناء", "Build placement"))
     .dropdown(tr(player, "الموقع", "Location"), [tr(player, "هنا", "Here"), tr(player, "أمامي", "In front of me")], { defaultValueIndex: 1 })
     .dropdown(tr(player, "الدوران", "Rotation"), [tr(player, "حسب اتجاه نظري", "Face my direction"), "0°", "90°", "180°", "270°"], { defaultValueIndex: 0 })
     .slider("Move X", -32, 32, { defaultValue: 0, valueStep: 1 })
-    .slider(tr(player, "رفع/خفض", "Raise / lower"), -16, 32, { defaultValue: 0, valueStep: 1 })
+    .slider(tr(player, "رفع/خفض", "Raise / lower"), -16, 32, { defaultValue: initialRaise, valueStep: 1 })
     .slider("Move Z", -32, 32, { defaultValue: 0, valueStep: 1 })
     .submitButton(tr(player, "متابعة", "Continue"));
   const response = await form.show(player);
@@ -52,15 +54,17 @@ async function choosePlacement(player: Player, blueprint: Blueprint): Promise<Pl
   return placement(player, blueprint, location, rotation, dx, dy, dz);
 }
 
-async function confirmBlueprint(player: Player, blueprint: Blueprint, engine: BuildingEngine): Promise<void> {
+async function confirmBlueprint(player: Player, blueprint: Blueprint, engine: BuildingEngine, fixed?: Placement, imagePlan?: BuildPlan): Promise<void> {
   const validation = validateBlueprint(blueprint);
   if (!validation.ok) { player.sendMessage(`§cBlueprint invalid: ${validation.errors.join("; ")}`); return; }
-  const selected = await choosePlacement(player, blueprint);
+  if(imagePlan && imagePlan.target.dimension!==player.dimension.id)throw new Error("Plan dimension differs from player dimension");
+  const selected = fixed ?? await choosePlacement(player, blueprint, imagePlan?1:0);
   if (!selected) return;
   const bounds = calculateBounds(blueprint, { x: selected.origin[0], y: selected.origin[1], z: selected.origin[2] }, selected.rotation);
+  if(imagePlan && validation.estimatedBlocks>4096)showPreview(player.dimension,bounds.from,bounds.to);
   const form = new ActionFormData()
     .title(blueprint.name)
-    .body(`${tr(player, "الحجم", "Size")}: ${blueprint.size.x} × ${blueprint.size.y} × ${blueprint.size.z}\n${tr(player, "عدد البلوكات التقريبي", "Estimated block writes")}: ${validation.estimatedBlocks}\n${tr(player, "الفئة", "Tier")}: ${validation.tier}`)
+    .body(`${tr(player, "الحجم", "Size")}: ${blueprint.size.x} × ${blueprint.size.y} × ${blueprint.size.z}\n${tr(player, "عدد البلوكات التقريبي", "Estimated block writes")}: ${validation.estimatedBlocks}\n${tr(player, "الفئة", "Tier")}: ${validation.tier}${imagePlan?"\n"+imagePlan.assumptions.join("\n")+"\nConflicts pause the action; raise the foundation above occupied ground.":""}`)
     .button(tr(player, "👁 معاينة 10 ثوانٍ", "👁 Preview for 10 seconds"))
     .button(tr(player, "✓ ابدأ البناء", "✓ Build now"))
     .button(tr(player, "إلغاء", "Cancel"));
@@ -69,10 +73,10 @@ async function confirmBlueprint(player: Player, blueprint: Blueprint, engine: Bu
   if (response.selection === 0) {
     showPreview(player.dimension, bounds.from, bounds.to);
     player.sendMessage(tr(player, "§bالمعاينة مؤقتة ولا تغيّر العالم.", "§bPreview is temporary and does not change the world."));
-    system.runTimeout(() => void confirmBlueprint(player, blueprint, engine), 40);
+    system.runTimeout(() => {void confirmBlueprint(player, blueprint, engine, selected, imagePlan).catch(error=>{try{player.sendMessage("§c"+String(error));}catch{/* Player disconnected. */}});}, 40);
     return;
   }
-  try { engine.start(player, blueprint, selected); } catch (error) { player.sendMessage(`§c${error instanceof Error ? error.message : String(error)}`); }
+  try { engine.start(player, blueprint, {...selected,conflictPolicy:imagePlan?"pause_on_conflict":undefined}); } catch (error) { player.sendMessage(`§c${error instanceof Error ? error.message : String(error)}`); }
 }
 
 async function generate(player: Player, engine: BuildingEngine, planner: Planner): Promise<void> {
@@ -109,7 +113,7 @@ async function pasteBlueprint(player: Player, engine: BuildingEngine): Promise<v
   catch (error) { player.sendMessage(`§cInvalid JSON: ${error instanceof Error ? error.message : String(error)}`); }
 }
 
-export async function openMainMenu(player: Player, engine: BuildingEngine, planner: Planner, runtime: AgentRuntime, assistantPlanner: AssistantPlanner): Promise<void> {
+export async function openMainMenu(player: Player, engine: BuildingEngine, planner: Planner, runtime: AgentRuntime, assistantPlanner: AssistantPlanner, imageBridge?: ImageBridge): Promise<void> {
   try {
     const form = new ActionFormData().title("Minecraft AI Assistant").body(engine.statusText())
       .button(tr(player, "💬 افتح المساعد", "💬 Open Assistant"))
@@ -119,7 +123,8 @@ export async function openMainMenu(player: Player, engine: BuildingEngine, plann
       .button(tr(player, "⏸ إيقاف مؤقت / متابعة", "⏸ Pause / resume"))
       .button(tr(player, "✕ إلغاء البناء", "✕ Cancel build"))
       .button(tr(player, "↶ تراجع عن آخر بناء", "↶ Undo last build"))
-      .button(tr(player, "🌐 العربية / English", "🌐 العربية / English"));
+      .button(tr(player, "🌐 العربية / English", "🌐 العربية / English"))
+      .button("📷 Image-to-Build / البناء من صورة");
     const response = await form.show(player);
     if (response.canceled || response.selection === undefined) return;
     switch (response.selection) {
@@ -130,7 +135,8 @@ export async function openMainMenu(player: Player, engine: BuildingEngine, plann
       case 4: if (!engine.pause(player)) engine.resume(player); break;
       case 5: engine.cancel(player); break;
       case 6: try { engine.undo(player); } catch (error) { player.sendMessage(`§c${error instanceof Error ? error.message : String(error)}`); } break;
-      case 7: player.setDynamicProperty("aibuilder:locale", locale(player) === "ar" ? "en" : "ar"); await openMainMenu(player, engine, planner, runtime, assistantPlanner); break;
+      case 8: await imageMenu(player,engine,imageBridge,(p,plan,e)=>confirmBlueprint(p,plan.blueprint,e,undefined,plan)); break;
+      case 7: player.setDynamicProperty("aibuilder:locale", locale(player) === "ar" ? "en" : "ar"); await openMainMenu(player, engine, planner, runtime, assistantPlanner, imageBridge); break;
     }
   } catch (error) { player.sendMessage(`§cAI Builder UI: ${error instanceof Error ? error.message : String(error)}`); }
 }
@@ -139,7 +145,7 @@ export async function offerRecovery(player: Player, engine: BuildingEngine): Pro
   const response = await new MessageFormData().title("Minecraft AI Builder").body(tr(player, "تم اكتشاف بناء غير مكتمل.", "An unfinished build was detected.")).button1(tr(player, "إلغاءه", "Discard")).button2(tr(player, "متابعة", "Resume")).show(player);
   if (response.canceled) return;
   if (response.selection === 1) { try { engine.restorePersisted(player); engine.resume(player); } catch (error) { player.sendMessage(`§c${error instanceof Error ? error.message : String(error)}`); } }
-  else engine.discardPersisted();
+  else {try{engine.discardPersisted(player);}catch(error){player.sendMessage("§c"+String(error));}}
 }
 
 export function commandPlayer(entity: unknown): Player | undefined {
