@@ -1,4 +1,5 @@
-import { BiomeTypes, BlockTypes, Direction, system, type Player } from "@minecraft/server";
+import { BlockTypes, Direction, system, type Player } from "@minecraft/server";
+import { biomeErrors, findBiome } from "../runtime/compatibility.js";
 import { SAFE_BLOCK_SET, isBlockIdentifier } from "../blueprint/blocks.js";
 import { playerFacingRotation, rotatedSize, type Rotation } from "../blueprint/transform.js";
 import type { Blueprint, Vec3Tuple } from "../blueprint/types.js";
@@ -38,8 +39,8 @@ function faceOffset(face: Direction): Vec3Tuple {
     case Direction.Up: return [0, 1, 0];
     case Direction.East: return [1, 0, 0];
     case Direction.West: return [-1, 0, 0];
-    case Direction.North: return [0, 0, 1];
-    case Direction.South: return [0, 0, -1];
+    case Direction.North: return [0, 0, -1];
+    case Direction.South: return [0, 0, 1];
   }
 }
 function targetPosition(player: Player, target: unknown, adjacent = false): Vec3Tuple {
@@ -165,7 +166,7 @@ export function createToolDefinitions(): ToolDefinition[] {
       execute: () => ok("list_waypoints", `${listWaypoints().length} waypoint(s)`, { waypoints: listWaypoints() })
     },
     {
-      name: "navigate_to_waypoint", description: "Guide the player using the native Locator Bar and throttled action-bar direction/distance.", inputSchema: objectSchema({ name: { type: "string", minLength: 1, maxLength: 40 } }, ["name"]),
+      name: "navigate_to_waypoint", description: "Guide the player using throttled action-bar direction/distance, plus a native Locator Bar where supported.", inputSchema: objectSchema({ name: { type: "string", minLength: 1, maxLength: 40 } }, ["name"]),
       validate: args => stringError(args.name, "name", 40), assess: args => ({ risk: "LOW", estimatedBlocks: 0, summary: `Guide to ${String(args.name)}`, worldChanging: false }),
       execute: ({ player, navigation }, args) => { const waypoint = findWaypoint(String(args.name)); if (!waypoint) return { ok: false, tool: "navigate_to_waypoint", message: `Waypoint not found: ${String(args.name)}` }; navigation.start(player, waypoint); return ok("navigate_to_waypoint", `Guiding to ${waypoint.name}`, { waypoint }); }
     },
@@ -175,8 +176,8 @@ export function createToolDefinitions(): ToolDefinition[] {
     },
     {
       name: "find_biome", description: "Find a stable biome type from the world seed. This is seed-derived and does not inspect modified terrain.", inputSchema: objectSchema({ biome: { type: "string", pattern: "^minecraft:[a-z0-9_]+$" }, guide: { type: "boolean" }, saveAs: { type: "string", maxLength: 40 } }, ["biome"]),
-      validate: args => typeof args.biome === "string" && BiomeTypes.get(args.biome) ? [] : [`Unknown biome identifier: ${String(args.biome)}`], assess: args => ({ risk: "MEDIUM", estimatedBlocks: 0, summary: `Search for ${String(args.biome)} (one bounded seed query)`, worldChanging: false }),
-      execute: ({ player, navigation }, args) => { const found = player.dimension.calculateClosestBiomeFromSeed(player.location, String(args.biome), { boundingSize: { x: 4096, y: 384, z: 4096 } }); if (!found) return { ok: false, tool: "find_biome", message: `No ${String(args.biome)} found inside the bounded search` }; const coordinates: Vec3Tuple = [Math.floor(found.x), Math.floor(found.y), Math.floor(found.z)]; const distance = Math.round(Math.hypot(found.x - player.location.x, found.z - player.location.z)); let waypoint; if (args.saveAs || args.guide) waypoint = saveWaypoint({ name: String(args.saveAs ?? String(args.biome).replace("minecraft:", "")), dimensionId: player.dimension.id, coordinates, type: "biome" }); if (args.guide && waypoint) navigation.start(player, waypoint); return ok("find_biome", `Found ${String(args.biome)} about ${distance} blocks away`, { coordinates, distance, seedDerived: true }); }
+      validate: args => biomeErrors(args.biome), assess: args => ({ risk: "MEDIUM", estimatedBlocks: 0, summary: `Search for ${String(args.biome)} (one bounded seed query)`, worldChanging: false }),
+      execute: ({ player, navigation }, args) => { const found = findBiome(player.dimension, player.location, String(args.biome)); if (!found) return { ok: false, tool: "find_biome", message: `No ${String(args.biome)} found inside the bounded search` }; const coordinates: Vec3Tuple = [Math.floor(found.x), Math.floor(found.y), Math.floor(found.z)]; const distance = Math.round(Math.hypot(found.x - player.location.x, found.z - player.location.z)); let waypoint; if (args.saveAs || args.guide) waypoint = saveWaypoint({ name: String(args.saveAs ?? String(args.biome).replace("minecraft:", "")), dimensionId: player.dimension.id, coordinates, type: "biome" }); if (args.guide && waypoint) navigation.start(player, waypoint); return ok("find_biome", `Found ${String(args.biome)} about ${distance} blocks away`, { coordinates, distance, seedDerived: true }); }
     },
     {
       name: "cancel_current_action", description: "Cancel the current queued build or edit. Undo remains available.", inputSchema: objectSchema({}), validate: () => [], assess: () => ({ risk: "LOW", estimatedBlocks: 0, summary: "Cancel current action", worldChanging: false }),
