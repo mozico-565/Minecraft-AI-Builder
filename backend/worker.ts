@@ -1,10 +1,23 @@
+import { readBoundedBody } from "./request-limit.js";
+import { COMPANION_HTML } from "./companion.js";
+import { reply, type SessionBinding } from "./image-session.js";
+export { ImageSession } from "./image-session.js";
 import blueprintSchema from "../schemas/blueprint.schema.json" with { type: "json" };
 import { PLANNER_SYSTEM_PROMPT } from "./system-prompt.js";
 import { ASSISTANT_SYSTEM_PROMPT } from "./assistant-prompt.js";
 import { AGENT_RESPONSE_SCHEMA } from "./agent-schema.js";
 
 interface Env {
+  VISION_PROVIDER?: string;
+  OPENROUTER_API_KEY?: string;
+  OPENROUTER_MODEL?: string;
+  OPENROUTER_OUTPUT_FORMAT?: string;
+  OPENROUTER_PROVIDER?: string;
   AI_API_KEY: string;
+  AI_VISION_MODEL?: string;
+  AI_VISION_REASONING_EFFORT?: string;
+  AI_VISION_REASONING_FORMAT?: string;
+  IMAGE_SESSIONS?: SessionBinding;
   BUILDER_SHARED_SECRET: string;
   AI_BASE_URL?: string;
   AI_MODEL?: string;
@@ -13,6 +26,8 @@ interface Env {
 
 interface RequestBody {
   mode?: unknown;
+  session?: string;
+  dimension?: string;
   prompt?: unknown;
   locale?: unknown;
   limits?: { maxBlocks?: unknown; maxSize?: unknown };
@@ -40,6 +55,7 @@ async function providerRequest(env: Env, body: RequestBody): Promise<unknown> {
     : { type: "json_object" };
   const response = await fetch(`${base}/chat/completions`, {
     method: "POST",
+    signal: AbortSignal.timeout(45000),
     headers: { "content-type": "application/json", authorization: `Bearer ${env.AI_API_KEY}` },
     body: JSON.stringify({
       model,
@@ -55,8 +71,7 @@ async function providerRequest(env: Env, body: RequestBody): Promise<unknown> {
     })
   });
   if (!response.ok) {
-    const detail = (await response.text()).slice(0, 500);
-    throw new Error(`AI provider ${response.status}: ${detail}`);
+    throw new Error(`AI provider returned HTTP ${response.status}`);
   }
   const result = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
   const content = result.choices?.[0]?.message?.content;
@@ -66,11 +81,34 @@ async function providerRequest(env: Env, body: RequestBody): Promise<unknown> {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/companion") return new Response(COMPANION_HTML, {headers:{"content-type":"text/html;charset=utf-8","cache-control":"no-store","referrer-policy":"no-referrer","content-security-policy":"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src blob: data:; base-uri 'none'; frame-ancestors 'none'"}});
+    const match = /^\/image\/session\/([a-f0-9]{32})$/.exec(url.pathname);
+    if (match && request.method === "POST") {
+      if (!env.IMAGE_SESSIONS) return reply({error:"Image sessions not configured"},503);
+      if (request.headers.get("origin") !== url.origin) return reply({error:"Origin rejected"},403);
+      let text:string;try{text=await readBoundedBody(request,4600000);}catch{return reply({error:"Image request too large or invalid encoding"},413);}
+      return env.IMAGE_SESSIONS.get(env.IMAGE_SESSIONS.idFromName(match[1]!)).fetch(new Request("https://session/generate",{method:"POST",body:text}));
+    }
     if (request.method !== "POST") return json({ error: "POST required" }, 405);
     if (!env.BUILDER_SHARED_SECRET || bearer(request) !== env.BUILDER_SHARED_SECRET) return json({ error: "Unauthorized" }, 401);
-    if (!env.AI_API_KEY) return json({ error: "AI provider is not configured" }, 503);
+
     let body: RequestBody;
-    try { body = await request.json() as RequestBody; } catch { return json({ error: "Invalid JSON body" }, 400); }
+    try { const text = await readBoundedBody(request,300000); body = JSON.parse(text) as RequestBody; } catch { return json({ error: "Invalid JSON body" }, 400); }
+    if(!body || typeof body!=="object" || Array.isArray(body)) return json({error:"Request body must be an object"},400);
+    if (body.mode === "image_session" || body.mode === "image_fetch") {
+      if (!env.IMAGE_SESSIONS) return reply({error:"Image sessions not configured"},503);
+      if (body.mode === "image_session") {
+        if(body.dimension!==undefined && !["minecraft:overworld","minecraft:nether","minecraft:the_end"].includes(body.dimension))return reply({error:"Invalid dimension"},400);
+        const id=crypto.randomUUID().replace(/-/g,"");
+        const initialized = await env.IMAGE_SESSIONS.get(env.IMAGE_SESSIONS.idFromName(id)).fetch(new Request("https://session/init",{method:"POST",body:JSON.stringify({dimension:body.dimension??"minecraft:overworld"})}));
+        if(!initialized.ok)return reply({error:"Unable to initialize image session"},503);
+        return reply({session:id,url:url.origin+"/companion#"+id});
+      }
+      if (!/^[a-f0-9]{32}$/.test(body.session??"")) return reply({error:"Invalid session"},400);
+      return env.IMAGE_SESSIONS.get(env.IMAGE_SESSIONS.idFromName(body.session!)).fetch(new Request("https://session/plan"));
+    }
+    if (!env.AI_API_KEY) return json({ error: "AI provider is not configured" }, 503);
     const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
     if (prompt.length < 3 || prompt.length > 1200) return json({ error: "Prompt must be 3-1200 characters" }, 400);
     try {

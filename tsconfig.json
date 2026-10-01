@@ -7,8 +7,17 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
     "skipLibCheck": true,
-    "types": ["node"],
-    "lib": ["ES2020"]
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "ES2020"
+    ]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "backend/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "backend/**/*.ts",
+    "tools/**/*.ts"
+  ]
 }

@@ -53,3 +53,8 @@ export const serverAssistantPlanner: AssistantPlanner = {
     return parsed.response as AgentResponse;
   }
 };
+
+export const serverImageBridge: import("../image/ui.js").ImageBridge = {
+ async create(dimension){return await post({mode:"image_session",dimension}) as unknown as {session:string;url:string};},
+ async fetch(session){const result=await post({mode:"image_fetch",session});return result.plan as import("../image/build-plan.js").BuildPlan|undefined;}
+};

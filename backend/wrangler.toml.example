@@ -1,6 +1,11 @@
-name = "minecraft-ai-builder"
+name = "minecraft-ai-backend"
 main = "../dist/backend/worker.mjs"
-compatibility_date = "2026-09-29"
+compatibility_date = "2026-09-30"
+# Preserve plain variables configured in the existing dashboard Worker.
+keep_vars = true
+# Deploy to the existing Worker name; do not use --env production (a different Worker).
+workers_dev = true
+preview_urls = false
 
 [vars]
 AI_BASE_URL = "https://api.groq.com/openai/v1"
@@ -11,3 +16,31 @@ AI_STRUCTURED_OUTPUT = "json_object"
 # Add secrets with:
 # wrangler secret put AI_API_KEY
 # wrangler secret put BUILDER_SHARED_SECRET
+
+# Select a currently available vision model from your provider's official model list.
+AI_VISION_MODEL = "qwen/qwen3.8-27b"
+AI_VISION_REASONING_EFFORT = "none"
+AI_VISION_REASONING_FORMAT = "hidden"
+# Groq-specific reasoning options: omit both for providers that do not accept them.
+
+# OpenRouter Vision, key added ONLY via wrangler secret put.
+VISION_PROVIDER = "openrouter"
+OPENROUTER_MODEL = "minimax/minimax-m3"
+# Runtime-tested strict output endpoint; original schemas still validate every result.
+OPENROUTER_OUTPUT_FORMAT = "json_schema"
+OPENROUTER_PROVIDER = "Together"
+# npx wrangler secret put OPENROUTER_API_KEY --config backend/wrangler.toml
+
+[[durable_objects.bindings]]
+name = "IMAGE_SESSIONS"
+class_name = "ImageSession"
+
+[[migrations]]
+tag = "v1-image-sessions"
+new_sqlite_classes = ["ImageSession"]
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true

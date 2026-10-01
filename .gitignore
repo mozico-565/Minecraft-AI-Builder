@@ -5,3 +5,8 @@ coverage/
 .env
 .dev.vars
 .DS_Store
+
+.local/
+backend/wrangler.toml
+**/secrets.json
+.wrangler/

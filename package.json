@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "clean": "node tools/clean.mjs",
-    "typecheck": "tsc --noEmit",
-    "test": "node --test --import tsx tests/*.test.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.android.json",
+    "test": "node --import tsx tools/run-tests.mjs",
     "validate": "node tools/validate-project.mjs",
     "build": "node tools/build.mjs",
-    "check": "npm run typecheck && npm test && npm run validate && npm run build"
+    "build:android": "npm run typecheck && npm run validate && node tools/build.mjs --android-only",
+    "check": "npm run typecheck && npm test && npm run validate && npm run build",
+    "generate-schema": "node tools/generate-schema.mjs",
+    "dev:companion": "node --import tsx tools/serve-companion.ts",
+    "test:vision-live": "node --import tsx tools/vision-smoke.ts"
   },
   "devDependencies": {
     "@minecraft/server": "2.9.0",
@@ -19,6 +23,8 @@
     "@types/node": "24.5.2",
     "ajv": "8.17.1",
     "esbuild": "0.25.10",
+    "minecraft-server-1-21-100": "npm:@minecraft/server@2.1.0",
+    "minecraft-server-ui-1-21-100": "npm:@minecraft/server-ui@2.0.0",
     "tsx": "4.20.5",
     "typescript": "5.9.2"
   }

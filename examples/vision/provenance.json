@@ -1,0 +1,24 @@
+{
+  "kind": "actual-provider-output",
+  "testedAt": "2026-09-30T10:38:48.944Z",
+  "worker": "minecraft-ai-backend",
+  "deploymentVersion": "7380d5ee-386e-416f-961c-43ec99279814",
+  "model": "minimax/minimax-m3",
+  "provider": "Together",
+  "outputFormat": "json_schema",
+  "reference": "https://tile.loc.gov/storage-services/service/pnp/ppmsca/65100/65198v.jpg",
+  "referenceCrop": "two exterior building views, 355x139 JPEG",
+  "imageSha256": "21f51df76c19ae72eb08f59001cea701a42c94ab3e914372e435a8ab2a0de3f8",
+  "results": {
+    "productionImageSession": "passed",
+    "realImageGeneration": "passed",
+    "blueprintSchema": "passed",
+    "buildPlanSchema": "passed",
+    "semanticValidation": "passed",
+    "sessionStorage": "passed",
+    "authenticatedImageFetch": "passed",
+    "physicalAndroid": "not-tested",
+    "bedrockWorld": "not-tested"
+  },
+  "note": "The blueprint was not hand-edited. No provider output fixture or mock was used. Session capabilities, image data and credentials are excluded."
+}

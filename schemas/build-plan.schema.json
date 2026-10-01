@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minecraft-ai-builder.dev/schemas/build-plan-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_id",
+    "task_id",
+    "request_summary",
+    "source_images",
+    "detail",
+    "scale",
+    "blueprint",
+    "dimensions",
+    "assumptions",
+    "open_choices",
+    "palette",
+    "plan_hash",
+    "conflict_policy",
+    "target",
+    "steps",
+    "estimates",
+    "validation",
+    "persistence",
+    "bounds",
+    "progress",
+    "checkpoint"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "plan_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "request_summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1200
+    },
+    "source_images": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "view",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "view": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1536
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1536
+          }
+        }
+      }
+    },
+    "detail": {
+      "enum": [
+        "FAST",
+        "BALANCED",
+        "DETAILED",
+        "ULTRA"
+      ]
+    },
+    "scale": {
+      "type": "number",
+      "minimum": 0.25,
+      "maximum": 4
+    },
+    "blueprint": {
+      "$ref": "https://minecraft-ai-builder.dev/schemas/blueprint-v1.json"
+    },
+    "dimensions": {
+      "$ref": "https://minecraft-ai-builder.dev/schemas/blueprint-v1.json#/$defs/size"
+    },
+    "assumptions": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
+    },
+    "open_choices": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
+    },
+    "palette": {
+      "type": "object",
+      "maxProperties": 48,
+      "additionalProperties": {
+        "$ref": "https://minecraft-ai-builder.dev/schemas/blueprint-v1.json#/$defs/blockId"
+      }
+    },
+    "plan_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}$"
+    },
+    "conflict_policy": {
+      "const": "pause_on_conflict"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dimension",
+        "anchor",
+        "orientation"
+      ],
+      "properties": {
+        "dimension": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "anchor": {
+          "const": "player-relative"
+        },
+        "orientation": {
+          "const": "player-facing"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dependencies",
+          "operation_count"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "dependencies": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "operation_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 512
+          }
+        }
+      }
+    },
+    "estimates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "block_writes",
+        "snapshot_volume"
+      ],
+      "properties": {
+        "block_writes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 25000
+        },
+        "snapshot_volume": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "validated"
+      ],
+      "properties": {
+        "validated": {
+          "const": true
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resumable"
+      ],
+      "properties": {
+        "resumable": {
+          "const": true
+        }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "https://minecraft-ai-builder.dev/schemas/blueprint-v1.json#/$defs/coord"
+        },
+        "to": {
+          "$ref": "https://minecraft-ai-builder.dev/schemas/blueprint-v1.json#/$defs/coord"
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed_batches"
+      ],
+      "properties": {
+        "completed_batches": {
+          "const": 0
+        }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "next_batch"
+      ],
+      "properties": {
+        "next_batch": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

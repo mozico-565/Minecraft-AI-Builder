@@ -1,3 +1,4 @@
+import { matchesInputSchema } from "./input-schema.js";
 import type { Player } from "@minecraft/server";
 import type { Vec3Tuple } from "../blueprint/types.js";
 import type { BuildingEngine } from "../builder/engine.js";
@@ -37,6 +38,7 @@ export class AgentRuntime {
     const assessments = parsed.response.toolCalls.map(call => {
       const definition = this.registry.get(call.tool);
       if (!definition) throw new Error(`Unknown tool: ${call.tool}`);
+      if(!matchesInputSchema(call.arguments,definition.inputSchema))throw new Error(call.tool+": arguments do not match input schema");
       const errors = definition.validate(call.arguments);
       if (errors.length) throw new Error(`${call.tool}: ${errors.join("; ")}`);
       return definition.assess(call.arguments);

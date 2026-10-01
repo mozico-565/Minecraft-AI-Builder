@@ -1,3 +1,4 @@
+import type { ImageBridge } from "../image/ui.js";
 import { CommandPermissionLevel, system, world, type Player } from "@minecraft/server";
 import { BuildingEngine } from "../builder/engine.js";
 import type { Planner } from "../planner/types.js";
@@ -8,7 +9,7 @@ import { ToolRegistry } from "../agent/registry.js";
 import { NavigationService } from "../navigation/service.js";
 import { openAssistantMenu } from "../ui/assistant.js";
 
-export function startApp(planner: Planner, assistantPlanner: AssistantPlanner): BuildingEngine {
+export function startApp(planner: Planner, assistantPlanner: AssistantPlanner, imageBridge?: ImageBridge): BuildingEngine {
   const engine = new BuildingEngine();
   const navigation = new NavigationService();
   const runtime = new AgentRuntime(new ToolRegistry(), engine, navigation);
@@ -22,7 +23,7 @@ export function startApp(planner: Planner, assistantPlanner: AssistantPlanner): 
         return undefined;
       });
     };
-    register("menu", "Open Minecraft AI Assistant", player => void openMainMenu(player, engine, planner, runtime, assistantPlanner));
+    register("menu", "Open Minecraft AI Assistant", player => void openMainMenu(player, engine, planner, runtime, assistantPlanner, imageBridge));
     register("assistant", "Open the natural-language assistant", player => void openAssistantMenu(player, runtime, assistantPlanner));
     register("pause", "Pause the active build", player => { engine.pause(player); });
     register("resume", "Resume the active build", player => { engine.resume(player); });
@@ -32,14 +33,14 @@ export function startApp(planner: Planner, assistantPlanner: AssistantPlanner): 
   });
 
   world.afterEvents.itemUse.subscribe(event => {
-    if (event.source.isSneaking && event.itemStack.typeId === "minecraft:compass") void openMainMenu(event.source, engine, planner, runtime, assistantPlanner);
+    if (event.source.isSneaking && event.itemStack.typeId === "minecraft:compass") void openMainMenu(event.source, engine, planner, runtime, assistantPlanner, imageBridge);
   });
 
   world.afterEvents.playerSpawn.subscribe(event => {
     if (!event.initialSpawn) return;
     const player = event.player;
     system.runTimeout(() => {
-      if (engine.hasPersistedJob()) void offerRecovery(player, engine);
+      if (engine.hasPersistedJob(player)) void offerRecovery(player, engine);
       else player.sendMessage("§bMinecraft AI Assistant§r — crouch/sneak and use a compass, or type §f/aibuilder:menu");
     }, 40);
   });

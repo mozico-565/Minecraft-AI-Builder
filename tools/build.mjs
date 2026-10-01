@@ -1,11 +1,12 @@
 import { build } from "esbuild";
-import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
+import { cp, mkdir, readFile, writeFile, readdir } from "node:fs/promises";
+
 import { resolve } from "node:path";
-import { deflateSync } from "node:zlib";
+import { deflateSync, deflateRawSync } from "node:zlib";
 
 const root = resolve(".");
 const dist = resolve("dist");
+const androidOnly = process.argv.includes("--android-only");
 const externals = ["@minecraft/server", "@minecraft/server-ui", "@minecraft/server-net", "@minecraft/server-admin"];
 
 function crc32(buffer) {
@@ -46,19 +47,34 @@ async function buildPack(sourceDir, entry, outputDir, artifactName) {
   await writeFile(`${outputDir}/pack_icon.png`, iconPng());
   await build({ entryPoints: [entry], outfile: `${outputDir}/scripts/main.js`, bundle: true, format: "esm", platform: "neutral", target: "es2020", external: externals, minify: true, sourcemap: false, logLevel: "info" });
   const artifact = `${dist}/${artifactName}`;
-  execFileSync("zip", ["-q", "-r", "-9", artifact, "."], { cwd: outputDir });
+  await zipDirectory(outputDir,artifact);
 }
 
-await import("./clean.mjs");
+if (!androidOnly) await import("./clean.mjs");
 await mkdir(dist, { recursive: true });
 await buildPack(`${root}/behavior_pack`, `${root}/src/main.ts`, `${dist}/android-pack`, "Minecraft-AI-Builder-Android.mcpack");
+await cp(`${dist}/Minecraft-AI-Builder-Android.mcpack`, `${dist}/Minecraft-AI-Builder-Android-1.21.100.mcpack`);
+if (!androidOnly) {
 await buildPack(`${root}/server_behavior_pack`, `${root}/src/main-server.ts`, `${dist}/server-pack`, "Minecraft-AI-Builder-Server.mcpack");
 await mkdir(`${dist}/backend`, { recursive: true });
 await build({ entryPoints: [`${root}/backend/worker.ts`], outfile: `${dist}/backend/worker.mjs`, bundle: true, format: "esm", platform: "browser", target: "es2022", minify: true, logLevel: "info" });
-await cp(`${root}/backend/wrangler.toml.example`, `${dist}/backend/wrangler.toml.example`);
+// Packaged config is relative to dist/backend, not the source backend folder.
+const deployConfig=(await readFile(`${root}/backend/wrangler.toml.example`,"utf8")).replace('main = "../dist/backend/worker.mjs"','main = "./worker.mjs"');
+await writeFile(`${dist}/backend/wrangler.toml.example`,deployConfig);
+await writeFile(`${dist}/backend/wrangler.toml`,deployConfig);
 await cp(`${root}/schemas/blueprint.schema.json`, `${dist}/blueprint.schema.json`);
+await cp(`${root}/schemas/build-plan.schema.json`, `${dist}/build-plan.schema.json`);
+}
 
-for (const artifact of ["Minecraft-AI-Builder-Android.mcpack", "Minecraft-AI-Builder-Server.mcpack"]) {
+for (const artifact of ["Minecraft-AI-Builder-Android.mcpack", "Minecraft-AI-Builder-Android-1.21.100.mcpack", ...(!androidOnly ? ["Minecraft-AI-Builder-Server.mcpack"] : [])]) {
   const bytes = (await readFile(`${dist}/${artifact}`)).length;
   console.log(`${artifact}: ${bytes} bytes`);
+}
+
+async function zipDirectory(directory, destination) {
+ const entries=[]; async function walk(dir,prefix=""){for(const item of await readdir(dir,{withFileTypes:true})){if(item.isDirectory())await walk(dir+"/"+item.name,prefix+item.name+"/");else entries.push({name:prefix+item.name,data:await readFile(dir+"/"+item.name)});}} await walk(directory);
+ const files=[],central=[];let offset=0;
+ for(const entry of entries){const name=Buffer.from(entry.name);const data=deflateRawSync(entry.data);const crc=crc32(entry.data);const header=Buffer.alloc(30);header.writeUInt32LE(0x04034b50);header.writeUInt16LE(20,4);header.writeUInt16LE(8,8);header.writeUInt16LE(33,12);header.writeUInt32LE(crc,14);header.writeUInt32LE(data.length,18);header.writeUInt32LE(entry.data.length,22);header.writeUInt16LE(name.length,26);
+ const c=Buffer.alloc(46);c.writeUInt32LE(0x02014b50);c.writeUInt16LE(20,4);c.writeUInt16LE(20,6);c.writeUInt16LE(8,10);c.writeUInt16LE(33,14);c.writeUInt32LE(crc,16);c.writeUInt32LE(data.length,20);c.writeUInt32LE(entry.data.length,24);c.writeUInt16LE(name.length,28);c.writeUInt32LE(offset,42);files.push(header,name,data);central.push(c,name);offset+=header.length+name.length+data.length;}
+ const directoryData=Buffer.concat(central);const end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(entries.length,8);end.writeUInt16LE(entries.length,10);end.writeUInt32LE(directoryData.length,12);end.writeUInt32LE(offset,16);await writeFile(destination,Buffer.concat([...files,directoryData,end]));
 }

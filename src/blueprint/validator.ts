@@ -2,6 +2,7 @@ import { compileBlueprint, primitiveVolume } from "./compiler.js";
 import { isBlockIdentifier, SAFE_BLOCK_SET } from "./blocks.js";
 import type { Blueprint, Operation, ValidationLimits, ValidationResult } from "./types.js";
 import { MOBILE_LIMITS } from "./types.js";
+import schemaValid from "./schema-validator.generated.js";
 
 function collectBlocks(operation: Operation, result: string[]): void {
   if ("block" in operation) result.push(operation.block);
@@ -17,6 +18,12 @@ export function validateBlueprint(
   const warnings: string[] = [];
   let estimatedBlocks = 0;
   let expandedOperations = 0;
+  try {
+    const text = JSON.stringify(value);
+    if (!text || text.length > 250_000 || !schemaValid(value)) return { ok: false, errors: ["Blueprint does not match the supported JSON schema or exceeds input limits"], warnings, estimatedBlocks, expandedOperations, tier: "unsafe" };
+  } catch {
+    return { ok: false, errors: ["Blueprint must be bounded JSON data"], warnings, estimatedBlocks, expandedOperations, tier: "unsafe" };
+  }
   const blueprint = value as Partial<Blueprint>;
 
   if (!value || typeof value !== "object" || Array.isArray(value)) errors.push("Blueprint must be an object");

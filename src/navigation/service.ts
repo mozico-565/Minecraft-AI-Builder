@@ -1,7 +1,8 @@
-import { LocationWaypoint, WaypointTexture, system, world, type Player } from "@minecraft/server";
+import { system, world, type Player } from "@minecraft/server";
+import { addOptionalLocatorMarker } from "../runtime/compatibility.js";
 import type { WaypointRecord } from "../memory/world-memory.js";
 
-interface ActiveGuide { waypoint: WaypointRecord; marker: LocationWaypoint }
+interface ActiveGuide { waypoint: WaypointRecord; removeMarker?: () => void }
 
 function distance(a: { x: number; y: number; z: number }, b: [number, number, number]): number {
   return Math.sqrt((a.x - b[0]) ** 2 + (a.y - b[1]) ** 2 + (a.z - b[2]) ** 2);
@@ -29,20 +30,18 @@ export class NavigationService {
 
   start(player: Player, waypoint: WaypointRecord): void {
     this.stop(player);
-    const dimension = world.getDimension(waypoint.dimensionId);
-    const marker = new LocationWaypoint(
-      { dimension, x: waypoint.coordinates[0], y: waypoint.coordinates[1], z: waypoint.coordinates[2] },
-      { textureBoundsList: [{ lowerBound: 0, texture: WaypointTexture.SmallStar }] },
-      { red: 0.2, green: 1, blue: 0.55 }
-    );
-    player.locatorBar.addWaypoint(marker);
-    this.guides.set(player.id, { waypoint, marker });
+    let removeMarker: (() => void) | undefined;
+    try {
+      const dimension = world.getDimension(waypoint.dimensionId);
+      removeMarker = addOptionalLocatorMarker(player, { dimension, x: waypoint.coordinates[0], y: waypoint.coordinates[1], z: waypoint.coordinates[2] });
+    } catch { /* Action-bar guidance remains available without a native marker. */ }
+    this.guides.set(player.id, { waypoint, removeMarker });
   }
 
   stop(player: Player): void {
     const current = this.guides.get(player.id);
     if (!current) return;
-    try { player.locatorBar.removeWaypoint(current.marker); } catch { /* marker already invalid */ }
+    try { current.removeMarker?.(); } catch { /* marker already invalid */ }
     this.guides.delete(player.id);
   }
 
